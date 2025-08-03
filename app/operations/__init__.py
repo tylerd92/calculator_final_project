@@ -20,3 +20,9 @@ def divide(a: Number, b: Number) -> Number:
     
     result = a / b
     return result
+
+def power(a: Number, b: Number) -> Number:
+    if b < 0:
+        raise ValueError("Exponent must be non-negative!")
+    result = a ** b
+    return result
