@@ -9,11 +9,12 @@ class CalculationType(str, Enum):
     SUBTRACTION = "subtraction"
     MULTIPLICATION = "multiplication"
     DIVISION = "division"
+    POWER = "power"
 
 class CalculationBase(BaseModel):
     type: CalculationType = Field(
         ...,
-        description="Type of calculation (addition, subtraction, multiplication, division)",
+        description="Type of calculation (addition, subtraction, multiplication, division, power)",
         example="addition"
     )
     inputs: List[float] = Field(
@@ -45,6 +46,9 @@ class CalculationBase(BaseModel):
         if self.type == CalculationType.DIVISION:
             if any(x == 0 for x in self.inputs[1:]):
                 raise ValueError("Cannot divide by zero")
+        if self.type == CalculationType.POWER:
+            if any(x < 0 for x in self.inputs[1:]):
+                raise ValueError("Exponent must be non-negative for power calculations")
         return self
     
     model_config = ConfigDict(

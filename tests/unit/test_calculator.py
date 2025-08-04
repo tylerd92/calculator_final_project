@@ -2,7 +2,7 @@
 
 import pytest  # Import the pytest framework for writing and running tests
 from typing import Union  # Import Union for type hinting multiple possible types
-from app.operations import add, subtract, multiply, divide  # Import the calculator functions from the operations module
+from app.operations import add, subtract, multiply, divide, power  # Import the calculator functions from the operations module
 
 # Define a type alias for numbers that can be either int or float
 Number = Union[int, float]
@@ -232,3 +232,71 @@ def test_divide_by_zero() -> None:
     # Assert that the exception message contains the expected error message
     assert "Cannot divide by zero!" in str(excinfo.value), \
         f"Expected error message 'Cannot divide by zero!', but got '{excinfo.value}'"
+
+
+@pytest.mark.parametrize(
+    "a, b, expected",
+    [
+        (8, 2, 64),          # Test power with positive base and exponent
+        (2, 3, 8),           # Test power with positive base and positive exponent
+        (2, 0, 1),           # Test power with any number raised to zero
+        (5, 1, 5),           # Test power with positive base
+    ],
+    ids=[
+        "power_positive_base_and_exponent",
+        "power_positive_base_and_positive_exponent",
+        "power_any_number_raised_to_zero",
+        "power_positive_base",
+    ]
+)
+def test_power_exponent(a: Number, b: Number, expected: Number) -> None:
+    """
+    Test the 'power' function with various combinations of integers and floats.
+
+    This parameterized test verifies that the 'power' function correctly calculates the power
+    of a base raised to an exponent, handling both positive and negative values, as well as
+    integers and floats. Parameterization allows for efficient testing of multiple scenarios.
+
+    Parameters:
+    - a (Number): The base number.
+    - b (int): The exponent.
+    - expected (Number): The expected result of the power operation.
+
+    Steps:
+    1. Call the 'power' function with arguments 'a' and 'b'.
+    2. Assert that the result is equal to 'expected'.
+
+    Example:
+    >>> test_power_exponent(8, 2, 64)
+    >>> test_power_exponent(2, 3, 8)
+    """
+    # Call the 'power' function with the provided arguments
+    result = power(a, b)
+    
+    # Assert that the result of power(a, b) matches the expected value
+    assert result == expected, f"Expected power({a}, {b}) to be {expected}, but got {result}"
+
+def test_power_negative_exponent() -> None:
+    """
+    Test the 'power' function with a negative exponent.
+
+    This negative test case verifies that attempting to raise a number to a negative exponent
+    raises a ValueError with the appropriate error message. It ensures that the application
+    correctly handles invalid operations and provides meaningful feedback to the user.
+
+    Steps:
+    1. Attempt to call the 'power' function with arguments 2 and -3, which should raise a ValueError.
+    2. Use pytest's 'raises' context manager to catch the expected exception.
+    3. Assert that the error message contains "Exponent must be non-negative!".
+
+    Example:
+    >>> test_power_negative_exponent()
+    """
+    # Use pytest's context manager to check for a ValueError when using a negative exponent
+    with pytest.raises(ValueError) as excinfo:
+        # Attempt to raise 2 to the power of -3, which should raise a ValueError
+        power(2, -3)
+    
+    # Assert that the exception message contains the expected error message
+    assert "Exponent must be non-negative!" in str(excinfo.value), \
+        f"Expected error message 'Exponent must be non-negative!', but got '{excinfo.value}'"
