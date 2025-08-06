@@ -18,7 +18,7 @@ from app.models.calculation import Calculation
 from app.models.user import User
 from app.schemas.calculation import CalculationBase, CalculationResponse, CalculationUpdate
 from app.schemas.token import TokenResponse
-from app.schemas.user import UserCreate, UserResponse, UserLogin
+from app.schemas.user import UserCreate, UserResponse, UserLogin, UserUpdate
 from app.database import Base, get_db, engine
 
 
@@ -280,6 +280,25 @@ def delete_calculation(
     db.delete(calculation)
     db.commit()
     return None
+
+# ------------------------------------------------------------------------------
+# User Profile Endpoints
+# ------------------------------------------------------------------------------
+@app.put("/user/profile", response_model=UserResponse, tags=["user"])
+def update_user(
+    user_update: UserUpdate,
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Get the user
+    user = db.query(User).filter(User.id == current_user.id).first()
+
+    if user_update.username is not None and user_update.email is not None:
+        # Update fields
+        user.update(username=user_update.username, email=user_update.email)
+
+    # Commit to database
+    db.commit()
 
 # ------------------------------------------------------------------------------
 # Main Block to Run the Server

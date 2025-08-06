@@ -143,6 +143,12 @@ class UserUpdate(BaseModel):
         description="User's unique username"
     )
 
+    @model_validator(mode='after')
+    def validate_update_fields(self) -> "UserUpdate":
+        if not any([self.first_name, self.last_name, self.email, self.username]):
+            raise ValueError("At least one field must be updated")
+        return self
+
     model_config = ConfigDict(from_attributes=True)
 
 class PasswordUpdate(BaseModel):
