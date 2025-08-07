@@ -230,10 +230,3 @@ class User(Base):
                 return None
         except JWTError:
             return None
-        
-    @classmethod
-    def update_user(cls):
-        """
-        Placeholder for user update logic with validation.
-        """
-        pass

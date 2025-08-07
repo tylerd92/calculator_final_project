@@ -187,3 +187,39 @@ def test_invalid_inputs_for_power():
     power = Power(user_id=dummy_user_id(), inputs=[4])
     with pytest.raises(ValueError, match="Inputs must be a list with at least two numbers."):
         power.get_result()
+
+def test_addition_invalid_input_list():
+    inputs = [10]
+    addition = Addition(user_id=dummy_user_id(), inputs=inputs)
+    with pytest.raises(ValueError, match="Inputs must be a list with at least two numbers."):
+        addition.get_result()
+
+def test_subtract_invalid_input():
+    inputs = "invalid"
+    subtraction = Subtraction(user_id=dummy_user_id(), inputs=inputs)
+    with pytest.raises(ValueError, match="Inputs must be a list of numbers."):
+        subtraction.get_result()
+
+def test_multiplication_invalid_input():
+    inputs = "invalid input"
+    multiplication = Multiplication(user_id=dummy_user_id(), inputs=inputs)
+    with pytest.raises(ValueError, match="Inputs must be a list of numbers."):
+        multiplication.get_result()
+
+def test_multiplication_invalid_invalid_input_list():
+    inputs = [2]
+    multiplication = Multiplication(user_id=dummy_user_id(), inputs=inputs)
+    with pytest.raises(ValueError, match="Inputs must be a list with at least two numbers."):
+        multiplication.get_result()
+
+def test_division_invalid_input():
+    inputs = "invalid input"
+    division = Division(user_id=dummy_user_id(), inputs=inputs)
+    with pytest.raises(ValueError, match="Inputs must be a list of numbers."):
+        division.get_result()
+
+def test_power_invalid_input():
+    inputs = "invalid input"
+    power = Power(user_id=dummy_user_id(), inputs=inputs)
+    with pytest.raises(ValueError, match="Inputs must be a list of numbers."):
+        power.get_result()
