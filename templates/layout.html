@@ -187,6 +187,20 @@
         }
       }
 
+      // Function to update welcome message
+      window.updateWelcomeMessage = function () {
+        const welcomeElement = document.getElementById('layoutUserWelcome');
+        if (welcomeElement) {
+          const username = localStorage.getItem('username');
+          if (username) {
+            welcomeElement.textContent = `Welcome, ${username}!`;
+            welcomeElement.classList.remove('hidden');
+          } else {
+            welcomeElement.classList.add('hidden');
+          }
+        }
+      };
+
       // Toast notification system
       window.showToast = function (message, type = 'info', duration = 5000) {
         const toast = document.createElement('div');

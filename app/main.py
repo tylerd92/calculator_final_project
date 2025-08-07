@@ -284,21 +284,91 @@ def delete_calculation(
 # ------------------------------------------------------------------------------
 # User Profile Endpoints
 # ------------------------------------------------------------------------------
-@app.put("/user/profile", response_model=UserResponse, tags=["user"])
-def update_user(
+@app.get("/user/profile", response_model=UserResponse, tags=["user"])
+def get_user_profile(
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get current user's profile information"""
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@app.post("/user/profile", response_model=UserResponse, tags=["user"])
+def update_user_profile(
     user_update: UserUpdate,
     current_user = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    """Update current user's profile information"""
     # Get the user
     user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    if user_update.username is not None and user_update.email is not None:
-        # Update fields
-        user.update(username=user_update.username, email=user_update.email)
+    # Check for duplicate username/email if they're being updated
+    if user_update.username and user_update.username != user.username:
+        existing_user = db.query(User).filter(User.username == user_update.username).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
+    
+    if user_update.email and user_update.email != user.email:
+        existing_user = db.query(User).filter(User.email == user_update.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already exists")
 
-    # Commit to database
+    # Update fields that are provided
+    update_data = {}
+    if user_update.username is not None:
+        update_data["username"] = user_update.username
+    if user_update.email is not None:
+        update_data["email"] = user_update.email
+    if user_update.first_name is not None:
+        update_data["first_name"] = user_update.first_name
+    if user_update.last_name is not None:
+        update_data["last_name"] = user_update.last_name
+
+    if update_data:
+        user.update(**update_data)
+        db.commit()
+        db.refresh(user)
+    
+    return user
+
+@app.post("/user/change-password", tags=["user"])
+def change_password(
+    password_data: dict = Body(...),
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Change current user's password"""
+    current_password = password_data.get("current_password")
+    new_password = password_data.get("new_password")
+    
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Current password and new password are required")
+    
+    # Get the user
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify current password
+    if not user.verify_password(current_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Validate new password
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters long")
+    
+    # Hash and update password
+    hashed_password = User.hash_password(new_password)
+    user.update(password=hashed_password)
+    
     db.commit()
+    
+    return {"message": "Password changed successfully"}
 
 # ------------------------------------------------------------------------------
 # Main Block to Run the Server
