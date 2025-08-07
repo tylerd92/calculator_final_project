@@ -325,3 +325,78 @@ def test_error_handling():
             session.execute(text("INVALID SQL"))
     assert "INVALID SQL" in str(exc_info.value)
 
+def test_authenticate_success(monkeypatch, db_session):
+    """
+    Test successful authentication with correct username/email and password.
+    """
+    # Create a user with a known password
+    password = "securepassword"
+    user_data = create_fake_user()
+    user_data["password"] = User.hash_password(password)
+    user = User(**user_data)
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Patch verify_password to always return True for this test
+    monkeypatch.setattr("app.models.user.User.verify_password", lambda self, pw: pw == password)
+
+    # Authenticate by username
+    result = User.authenticate(db_session, user.username, password)
+    assert result is not None, "Authentication should succeed with correct username"
+    assert result["user"].id == user.id
+    assert "access_token" in result
+    assert "refresh_token" in result
+    assert result["token_type"] == "bearer"
+    assert result["expires_at"] is not None
+
+    # Authenticate by email
+    result2 = User.authenticate(db_session, user.email, password)
+    assert result2 is not None, "Authentication should succeed with correct email"
+    assert result2["user"].id == user.id
+
+def test_authenticate_wrong_password(monkeypatch, db_session):
+    """
+    Test authentication fails with wrong password.
+    """
+    password = "rightpassword"
+    user_data = create_fake_user()
+    user_data["password"] = User.hash_password(password)
+    user = User(**user_data)
+    db_session.add(user)
+    db_session.commit()
+
+    # Patch verify_password to always return False for wrong password
+    monkeypatch.setattr("app.models.user.User.verify_password", lambda self, pw: pw == password)
+
+    result = User.authenticate(db_session, user.username, "wrongpassword")
+    assert result is None, "Authentication should fail with wrong password"
+
+def test_authenticate_nonexistent_user(db_session):
+    """
+    Test authentication fails if user does not exist.
+    """
+    result = User.authenticate(db_session, "nonexistent", "irrelevant")
+    assert result is None, "Authentication should fail for nonexistent user"
+
+def test_authenticate_updates_last_login(monkeypatch, db_session):
+    """
+    Test that last_login is updated on successful authentication.
+    """
+    password = "testpass"
+    user_data = create_fake_user()
+    user_data["password"] = User.hash_password(password)
+    user = User(**user_data)
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Patch verify_password to always return True
+    monkeypatch.setattr("app.models.user.User.verify_password", lambda self, pw: pw == password)
+
+    old_last_login = user.last_login
+    result = User.authenticate(db_session, user.username, password)
+    db_session.refresh(user)
+    assert user.last_login is not None
+    if old_last_login:
+        assert user.last_login > old_last_login
