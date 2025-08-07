@@ -318,3 +318,34 @@ def test_model_division():
     with pytest.raises(ValueError):
         calc_zero = Calculation.create("division", dummy_user_id, [100, 0])
         calc_zero.get_result()
+
+
+def test_user_update():
+    from app.models.user import User
+    from app.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        # Create a test user
+        test_user = User(
+            first_name="Test",
+            last_name="User",
+            email=f"test.user{uuid4()}@example.com",
+            username=f"test_user_{uuid4()}",
+            password="hashedpassword"
+        )
+        db.add(test_user)
+        db.commit()
+        db.refresh(test_user)
+
+        original_updated_at = test_user.updated_at
+
+        # Update user details
+        updated_user = test_user.update(username="updated_username", email="updated_email@example.com")
+        db.commit()
+        db.refresh(updated_user)    
+        assert updated_user.username == "updated_username", "Username not updated correctly"
+        assert updated_user.email == "updated_email@example.com", "Email not updated correctly"
+        assert updated_user.updated_at > original_updated_at, "updated_at timestamp not updated"
+    finally:
+        db.close()
