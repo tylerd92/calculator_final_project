@@ -93,7 +93,7 @@ class AbstractCalculation:
 
     def get_result(self) -> float:
         """Method to compute calculation result"""
-        raise NotImplementedError
+        raise NotImplementedError # pragma: no cover
 
     def __repr__(self):
         return f"<Calculation(type={self.type}, inputs={self.inputs})>"
