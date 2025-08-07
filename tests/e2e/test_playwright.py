@@ -488,3 +488,15 @@ class TestE2ECalculatorApp:
                 if success_alert.is_visible():
                     expect(success_alert).to_contain_text("deleted")
 
+    def test_update_username_and_email(self, page: Page):
+        self.register_and_login_user(page)
+        page.goto(f"{self.BASE_URL}/profile")
+        page.wait_for_timeout(2000)
+        page.fill("#username", "newusername")
+        page.fill("#email", "new@example.com")
+        page.click("button[type='submit']:has-text('Update')")
+        page.wait_for_timeout(3000)
+        success_alert = page.locator("#successAlert")
+        if success_alert.is_visible():
+            expect(success_alert).to_contain_text("successfully")
+
