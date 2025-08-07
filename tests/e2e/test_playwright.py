@@ -488,6 +488,22 @@ class TestE2ECalculatorApp:
                 if success_alert.is_visible():
                     expect(success_alert).to_contain_text("deleted")
 
+    def test_profile_page_loads(self, page: Page):
+        """Test that the profile page loads correctly."""
+        self.register_and_login_user(page)
+        page.goto(f"{self.BASE_URL}/profile")
+        page.wait_for_timeout(2000)
+        
+        # Check page title
+        expect(page).to_have_title("User Profile")
+        
+        # Check for profile heading
+        expect(page.locator("h2")).to_contain_text("User Profile")
+        
+        # Check for user information fields
+        expect(page.locator("#username")).to_be_visible()
+        expect(page.locator("#email")).to_be_visible()
+
     def test_update_username_and_email(self, page: Page):
         self.register_and_login_user(page)
         page.goto(f"{self.BASE_URL}/profile")
@@ -500,3 +516,41 @@ class TestE2ECalculatorApp:
         if success_alert.is_visible():
             expect(success_alert).to_contain_text("successfully")
 
+    def test_change_password(self, page: Page):
+        self.register_and_login_user(page)
+        page.goto(f"{self.BASE_URL}/profile")
+        page.wait_for_timeout(2000)
+        page.fill("#current_password", "CalcPassword123!")
+        page.fill("#password", "NewCalcPassword123!")
+        page.fill("#confirm_password", "NewCalcPassword123!")
+        page.click("button[type='submit']:has-text('Change')")
+        page.wait_for_timeout(3000)
+        success_alert = page.locator("#successAlert")
+        if success_alert.is_visible():
+            expect(success_alert).to_contain_text("successfully")
+
+    def test_change_password_with_incorrect_current(self, page: Page):
+        self.register_and_login_user(page)
+        page.goto(f"{self.BASE_URL}/profile")
+        page.wait_for_timeout(2000)
+        page.fill("#current_password", "WrongPassword123!")
+        page.fill("#password", "NewCalcPassword123!")
+        page.fill("#confirm_password", "NewCalcPassword123!")
+        page.click("button[type='submit']:has-text('Change')")
+        page.wait_for_timeout(3000)
+        error_alert = page.locator("#errorAlert")
+        if error_alert.is_visible():
+            expect(error_alert).to_contain_text("Current password is incorrect")
+    
+    def test_change_password_with_mismatched_new(self, page: Page):
+        self.register_and_login_user(page)
+        page.goto(f"{self.BASE_URL}/profile")
+        page.wait_for_timeout(2000)
+        page.fill("#current_password", "CalcPassword123!")
+        page.fill("#password", "NewCalcPassword123!")
+        page.fill("#confirm_password", "DifferentNewCalcPassword123!")
+        page.click("button[type='submit']:has-text('Change')")
+        page.wait_for_timeout(3000)
+        error_alert = page.locator("#errorAlert")
+        if error_alert.is_visible():
+            expect(error_alert).to_contain_text("Passwords do not match")
