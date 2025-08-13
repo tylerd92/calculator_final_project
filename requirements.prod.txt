@@ -1,0 +1,29 @@
+# Core FastAPI dependencies
+fastapi==0.116.1
+uvicorn==0.35.0
+pydantic==2.11.7
+pydantic-settings==2.10.1
+
+# Database
+SQLAlchemy==2.0.42
+psycopg2-binary==2.9.10
+
+# Authentication & Security
+python-jose==3.5.0
+passlib==1.7.4
+python-multipart==0.0.20
+cryptography==45.0.5
+
+# Environment & Configuration
+python-dotenv==1.1.1
+
+# Templates & Static Files
+Jinja2==3.1.6
+starlette==0.47.2
+
+# HTTP Client (for health checks)
+httpx==0.28.1
+requests==2.32.4
+
+# Email validation
+email_validator==2.2.0

@@ -2,8 +2,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone, timedelta
 from uuid import UUID
 from typing import List
+import logging
 
 from fastapi import Body, FastAPI, Depends, HTTPException, status, Request, Form
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,6 +16,7 @@ from sqlalchemy.orm import Session
 import uvicorn
 
 from app.auth.dependencies import get_current_active_user
+from app.core.config import get_settings
 from app.models.calculation import Calculation
 from app.models.user import User
 from app.schemas.calculation import CalculationBase, CalculationResponse, CalculationUpdate
@@ -21,20 +24,42 @@ from app.schemas.token import TokenResponse
 from app.schemas.user import UserCreate, UserResponse, UserLogin, UserUpdate
 from app.database import Base, get_db, engine
 
+# Get settings
+settings = get_settings()
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL.upper()),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 
 # Create tables on startup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Creating tables...")
+    logger.info("Starting application...")
+    logger.info("Creating tables...")
     Base.metadata.create_all(bind=engine)
-    print("Tables created successfully!")
+    logger.info("Tables created successfully!")
     yield
+    logger.info("Application shutdown")
 
 app = FastAPI(
-    title="Calculations API",
+    title=settings.APP_NAME,
     description="API for managing calculations",
-    version="1.0.0",
-    lifespan=lifespan
+    version=settings.VERSION,
+    lifespan=lifespan,
+    debug=settings.DEBUG
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 # Mount the static files directory
 app.mount("/static", StaticFiles(directory="static"), name="static")

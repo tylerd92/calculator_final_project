@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     
     # CORS Configuration
     CORS_ORIGINS: List[str] = ["*"]  # Restrict in production
+    
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Parse CORS_ORIGINS from environment variable or return default"""
+        if isinstance(self.CORS_ORIGINS, str):
+            return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        return self.CORS_ORIGINS
 
     # Redis Configuration
     REDIS_URL: Optional[str] = "redis://localhost:6379/0"
