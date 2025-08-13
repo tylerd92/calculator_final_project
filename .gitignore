@@ -6,5 +6,22 @@ __pycache__/
 .pytest_cache
 htmlcov
 .env
+.env.production
+.env.*.local
 .vscode/
+
+# Production secrets and certificates
+nginx/ssl/
+*.pem
+*.key
+*.crt
+
+# Backup files
+*.backup
+backup_*.sql
+*_backup_*.tar.gz
+
+# Logs
+*.log
+logs/
 .env.*
