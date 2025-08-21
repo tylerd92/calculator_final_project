@@ -87,6 +87,10 @@ def register_page(request: Request):
 def user_profile_page(request: Request):
     return templates.TemplateResponse("user_profile.html", {"request": request})
 
+@app.get("/report", response_class=HTMLResponse, tags=["web"])
+def report_page(request: Request):
+    return templates.TemplateResponse("report.html", {"request": request})
+
 
 # ------------------------------------------------------------------------------
 # Health Endpoint
