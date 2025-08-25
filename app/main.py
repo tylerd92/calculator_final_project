@@ -243,6 +243,35 @@ def list_calculations(
     calculations = db.query(Calculation).filter(Calculation.user_id == current_user.id).all()
     return calculations
 
+# Report on Calculations (must be before the {calc_id} route)
+@app.get("/calculations/report", response_model=CalculationReportResponse, tags=["calculations"])
+def calculation_report(
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    calculations = db.query(Calculation).filter(Calculation.user_id == current_user.id).all()
+    total = len(calculations)
+    totals_by_type = {}
+
+    for calc in calculations:
+        if calc.type not in totals_by_type:
+            totals_by_type[calc.type] = 0
+        totals_by_type[calc.type] += 1
+    addition_total = totals_by_type.get("addition", 0)
+    subtraction_total = totals_by_type.get("subtraction", 0)
+    multiplication_total = totals_by_type.get("multiplication", 0)
+    division_total = totals_by_type.get("division", 0)
+    power_total = totals_by_type.get("power", 0)
+
+    return {
+        "total_calculations": total,
+        "addition_total": addition_total,
+        "subtraction_total": subtraction_total,
+        "multiplication_total": multiplication_total,
+        "division_total": division_total,
+        "power_total": power_total
+    }
+
 # Read / Retrieve a Specific Calculation by ID
 @app.get("/calculations/{calc_id}", response_model=CalculationResponse, tags=["calculations"])
 def get_calculation(
@@ -309,35 +338,6 @@ def delete_calculation(
     db.delete(calculation)
     db.commit()
     return None
-
-# Report on Calculations
-@app.get("/calculations/report", response_model=CalculationReportResponse, tags=["calculations"])
-def calculation_report(
-    current_user = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    calculations = db.query(Calculation).filter(Calculation.user_id == current_user.id).all()
-    total = len(calculations)
-    totals_by_type = {}
-
-    for calc in calculations:
-        if calc.type not in totals_by_type:
-            totals_by_type[calc.type] = 0
-        totals_by_type[calc.type] += 1
-    addition_total = totals_by_type.get("addition", 0)
-    subtraction_total = totals_by_type.get("subtraction", 0)
-    multiplication_total = totals_by_type.get("multiplication", 0)
-    division_total = totals_by_type.get("division", 0)
-    power_total = totals_by_type.get("power", 0)
-
-    return {
-        "total_calculations": total,
-        "addition_total": addition_total,
-        "subtraction_total": subtraction_total,
-        "multiplication_total": multiplication_total,
-        "division_total": division_total,
-        "power_total": power_total
-    }
 
 # ------------------------------------------------------------------------------
 # User Profile Endpoints

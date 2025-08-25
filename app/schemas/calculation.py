@@ -130,3 +130,49 @@ class CalculationResponse(CalculationBase):
             }
         }
     )
+
+class CalculationReportResponse(BaseModel):
+    total_calculations: int = Field(
+        ...,
+        description="Total number of calculations performed by the user",
+        example=25
+    )
+    addition_total: int = Field(
+        ...,
+        description="Total number of addition calculations",
+        example=10
+    )
+    subtraction_total: int = Field(
+        ...,
+        description="Total number of subtraction calculations",
+        example=5
+    )
+    multiplication_total: int = Field(
+        ...,
+        description="Total number of multiplication calculations",
+        example=4
+    )
+    division_total: int = Field(
+        ...,
+        description="Total number of division calculations",
+        example=3
+    )
+    power_total: int = Field(
+        ...,
+        description="Total number of power calculations",
+        example=3
+    )
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "total_calculations": 25,
+                "addition_total": 10,
+                "subtraction_total": 5,
+                "multiplication_total": 4,
+                "division_total": 3,
+                "power_total": 3
+            }
+        }
+    )
