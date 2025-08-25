@@ -140,8 +140,8 @@ class TestE2ECalculatorApp:
         page.click("button[type='submit']")
         page.wait_for_timeout(3000)
         
-        # Look for view button in the calculations table
-        view_button = page.locator("a:has-text('View')").first
+        # Look for view button in the calculations table (more specific selector)
+        view_button = page.locator("#calculationsTable a:has-text('View')").first
         if view_button.is_visible():
             view_button.click()
             page.wait_for_timeout(2000)
@@ -446,7 +446,7 @@ class TestE2ECalculatorApp:
         page.wait_for_timeout(3000)
         
         # Step 2: View calculation
-        view_link = page.locator("a:has-text('View')").first
+        view_link = page.locator("#calculationsTable a:has-text('View')").first
         if view_link.is_visible():
             view_link.click()
             page.wait_for_timeout(2000)
@@ -554,3 +554,19 @@ class TestE2ECalculatorApp:
         error_alert = page.locator("#errorAlert")
         if error_alert.is_visible():
             expect(error_alert).to_contain_text("Passwords do not match")
+
+    def test_report_page_loads(self, page: Page):
+        """Test that the report page loads correctly."""
+        self.register_and_login_user(page)
+        page.goto(f"{self.BASE_URL}/report")
+        page.wait_for_timeout(2000)
+
+        # Check for report heading
+        expect(page.locator("h1")).to_contain_text("Calculation Report")
+
+        # Check for either loading state OR report content (since loading might be fast)
+        loading_visible = page.locator("#loading").is_visible()
+        report_content_visible = page.locator("#report-content").is_visible()
+        
+        # At least one should be visible
+        assert loading_visible or report_content_visible, "Either loading or report content should be visible"
