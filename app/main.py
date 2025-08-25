@@ -19,7 +19,7 @@ from app.auth.dependencies import get_current_active_user
 from app.core.config import get_settings
 from app.models.calculation import Calculation
 from app.models.user import User
-from app.schemas.calculation import CalculationBase, CalculationResponse, CalculationUpdate
+from app.schemas.calculation import CalculationBase, CalculationResponse, CalculationUpdate, CalculationReportResponse
 from app.schemas.token import TokenResponse
 from app.schemas.user import UserCreate, UserResponse, UserLogin, UserUpdate
 from app.database import Base, get_db, engine
@@ -86,6 +86,10 @@ def register_page(request: Request):
 @app.get("/profile", response_class=HTMLResponse, tags=["web"])
 def user_profile_page(request: Request):
     return templates.TemplateResponse("user_profile.html", {"request": request})
+
+@app.get("/report", response_class=HTMLResponse, tags=["web"])
+def report_page(request: Request):
+    return templates.TemplateResponse("report.html", {"request": request})
 
 
 # ------------------------------------------------------------------------------
@@ -238,6 +242,35 @@ def list_calculations(
 ):
     calculations = db.query(Calculation).filter(Calculation.user_id == current_user.id).all()
     return calculations
+
+# Report on Calculations (must be before the {calc_id} route)
+@app.get("/calculations/report", response_model=CalculationReportResponse, tags=["calculations"])
+def calculation_report(
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    calculations = db.query(Calculation).filter(Calculation.user_id == current_user.id).all()
+    total = len(calculations)
+    totals_by_type = {}
+
+    for calc in calculations:
+        if calc.type not in totals_by_type:
+            totals_by_type[calc.type] = 0
+        totals_by_type[calc.type] += 1
+    addition_total = totals_by_type.get("addition", 0)
+    subtraction_total = totals_by_type.get("subtraction", 0)
+    multiplication_total = totals_by_type.get("multiplication", 0)
+    division_total = totals_by_type.get("division", 0)
+    power_total = totals_by_type.get("power", 0)
+
+    return {
+        "total_calculations": total,
+        "addition_total": addition_total,
+        "subtraction_total": subtraction_total,
+        "multiplication_total": multiplication_total,
+        "division_total": division_total,
+        "power_total": power_total
+    }
 
 # Read / Retrieve a Specific Calculation by ID
 @app.get("/calculations/{calc_id}", response_model=CalculationResponse, tags=["calculations"])

@@ -1,0 +1,251 @@
+{% extends "layout.html" %}
+{% block title %}Calculation Report{% endblock %}
+
+{% block content %}
+<div class="flex flex-col justify-center py-8 sm:py-12">
+    <div class="relative py-3 sm:max-w-xl sm:mx-auto">
+        <div
+            class="absolute inset-0 bg-gradient-to-r from-cyan-400 to-sky-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl">
+        </div>
+        <div class="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
+            <div class="max-w-md mx-auto">
+                <h1 class="text-2xl font-semibold text-center mb-6">Calculation Report</h1>
+
+                <!-- Loading state -->
+                <div id="loading" class="text-center">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    <p class="mt-2">Loading report data...</p>
+                </div>
+
+                <!-- Error state -->
+                <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <p id="error-message">Error loading report data. Please try again.</p>
+                    <div class="mt-2 space-x-2">
+                        <button id="retry-button"
+                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
+                            Retry
+                        </button>
+                        <a href="/login"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm inline-block">
+                            Go to Login
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Report content -->
+                <div id="report-content" class="hidden">
+                    <!-- Overall Statistics -->
+                    <div class="bg-blue-50 p-6 rounded-lg mb-6">
+                        <h2 class="text-xl font-semibold mb-4 text-blue-800">Overall Statistics</h2>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue-600" id="total-calculations">0</div>
+                            <div class="text-gray-600">Total Calculations</div>
+                        </div>
+                    </div>
+
+                    <!-- Calculation Types Breakdown -->
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Calculations by Type</h2>
+                        <div class="space-y-4">
+                            <!-- Addition -->
+                            <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
+                                    <span class="font-medium">Addition</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="font-bold text-green-600" id="addition-count">0</span>
+                                    <span class="text-sm text-gray-500 ml-2" id="addition-percentage">(0%)</span>
+                                </div>
+                            </div>
+
+                            <!-- Subtraction -->
+                            <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-red-500 rounded-full mr-3"></div>
+                                    <span class="font-medium">Subtraction</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="font-bold text-red-600" id="subtraction-count">0</span>
+                                    <span class="text-sm text-gray-500 ml-2" id="subtraction-percentage">(0%)</span>
+                                </div>
+                            </div>
+
+                            <!-- Multiplication -->
+                            <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                                    <span class="font-medium">Multiplication</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="font-bold text-blue-600" id="multiplication-count">0</span>
+                                    <span class="text-sm text-gray-500 ml-2" id="multiplication-percentage">(0%)</span>
+                                </div>
+                            </div>
+
+                            <!-- Division -->
+                            <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-yellow-500 rounded-full mr-3"></div>
+                                    <span class="font-medium">Division</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="font-bold text-yellow-600" id="division-count">0</span>
+                                    <span class="text-sm text-gray-500 ml-2" id="division-percentage">(0%)</span>
+                                </div>
+                            </div>
+
+                            <!-- Power -->
+                            <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-purple-500 rounded-full mr-3"></div>
+                                    <span class="font-medium">Power</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="font-bold text-purple-600" id="power-count">0</span>
+                                    <span class="text-sm text-gray-500 ml-2" id="power-percentage">(0%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Back to Dashboard -->
+                    <div class="text-center mt-6">
+                        <a href="/dashboard"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = localStorage.getItem('access_token');
+        console.log('Token from localStorage:', token ? 'Token exists' : 'No token found');
+
+        if (!token) {
+            console.log('No token, redirecting to login');
+            window.location.href = '/login';
+            return;
+        }
+
+        loadReportData();
+
+        async function loadReportData() {
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+            const errorMessage = document.getElementById('error-message');
+            const reportContent = document.getElementById('report-content');
+
+            try {
+                console.log('Fetching report data...');
+                console.log('Token exists:', !!token);
+
+                // First, let's test if we can reach the server
+                const response = await fetch('/calculations/report', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    let errorText = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorText = errorData.detail || errorText;
+                        console.log('Error details:', errorData);
+                    } catch (e) {
+                        console.log('Could not parse error response as JSON');
+                        errorText = response.statusText || errorText;
+                    }
+
+                    // Handle specific error cases
+                    if (response.status === 401) {
+                        console.log('Authentication failed, clearing token and redirecting to login');
+                        localStorage.clear();
+                        window.location.href = '/login';
+                        return;
+                    } else if (response.status === 404) {
+                        errorText = 'Report endpoint not found. Please check if the server is running correctly.';
+                    } else if (response.status >= 500) {
+                        errorText = 'Server error. Please try again later or contact support.';
+                    }
+
+                    throw new Error(errorText);
+                }
+
+                const data = await response.json();
+                console.log('Report data received:', data);
+
+                // Validate the response data
+                if (!data || typeof data.total_calculations === 'undefined') {
+                    throw new Error('Invalid response format received from server');
+                }
+
+                // Hide loading and show content
+                loadingElement.classList.add('hidden');
+                reportContent.classList.remove('hidden');
+
+                // Update the data in the template
+                updateReportData(data);
+
+
+            } catch (error) {
+                console.error('Error fetching report data:', error);
+                loadingElement.classList.add('hidden');
+                errorElement.classList.remove('hidden');
+
+                // Provide more helpful error messages
+                let displayMessage = error.message;
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    displayMessage = 'Unable to connect to server. Please check if the application is running.';
+                } else if (error.message.includes('Unexpected token')) {
+                    displayMessage = 'Server returned invalid response. Please try refreshing the page.';
+                }
+
+                errorMessage.textContent = `Error: ${displayMessage}`;
+
+                // Add retry functionality
+                const retryButton = document.getElementById('retry-button');
+                retryButton.onclick = () => {
+                    errorElement.classList.add('hidden');
+                    loadingElement.classList.remove('hidden');
+                    loadReportData();
+                };
+            }
+        }
+
+        function updateReportData(data) {
+            // Update total calculations
+            document.getElementById('total-calculations').textContent = data.total_calculations;
+
+            // Update individual counts
+            document.getElementById('addition-count').textContent = data.addition_total;
+            document.getElementById('subtraction-count').textContent = data.subtraction_total;
+            document.getElementById('multiplication-count').textContent = data.multiplication_total;
+            document.getElementById('division-count').textContent = data.division_total;
+            document.getElementById('power-count').textContent = data.power_total;
+
+            // Calculate and update percentages
+            const total = data.total_calculations;
+            if (total > 0) {
+                document.getElementById('addition-percentage').textContent = `(${Math.round((data.addition_total / total) * 100)}%)`;
+                document.getElementById('subtraction-percentage').textContent = `(${Math.round((data.subtraction_total / total) * 100)}%)`;
+                document.getElementById('multiplication-percentage').textContent = `(${Math.round((data.multiplication_total / total) * 100)}%)`;
+                document.getElementById('division-percentage').textContent = `(${Math.round((data.division_total / total) * 100)}%)`;
+                document.getElementById('power-percentage').textContent = `(${Math.round((data.power_total / total) * 100)}%)`;
+            }
+        }
+    });
+</script>
+{% endblock %}
