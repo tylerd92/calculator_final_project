@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings
 from typing import Optional, List
+import os
 
 class Settings(BaseSettings):
     # Environment
@@ -8,7 +9,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     
     # Database Configuration
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/fastapi_db"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/fastapi_db")
     TEST_DATABASE_URL: Optional[str] = None
 
     # JWT Configuration
